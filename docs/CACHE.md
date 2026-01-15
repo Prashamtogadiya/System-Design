@@ -1,68 +1,70 @@
-# Caching — System Design Reference
+# Cache Design for Low-Latency Reads and Reduced Backend Load
 
-## Purpose
-Caching reduces latency and load by storing frequently accessed data closer to the consumer. Use caches to improve read throughput, reduce upstream load, and smooth traffic bursts.
+In one line: Use cache to cut latency, reduce upstream load, and make system behavior predictable under bursts.
 
-## Cache Types
-- In-process (local): per-instance memory cache (e.g., LRU in-app).
-- Distributed: external systems shared across instances (e.g., Redis, Memcached).
-- CDN / edge caches: for static content or HTTP responses.
-- Client-side caches: browser, mobile caches.
 
-## Placement Strategies
-- Cache-aside: application checks cache, on miss reads DB and populates cache.
-- Read-through / Write-through: cache manages reads and writes to backing store.
-- Write-back: write to cache first; flush to backing store asynchronously.
+## When to cache
+- Read-heavy endpoints, expensive computations, or remote API results.
+- Data that can tolerate bounded staleness (minutes to hours).
+- To smooth traffic spikes and reduce DB cost.
 
-## Eviction Policies
-- LRU (least recently used): good general-purpose.
-- LFU (least frequently used): when access frequency matters.
-- FIFO / TTL: simple time-based eviction for predictable staleness.
-- Hybrid (e.g., LRU with TTL) for workload-specific tuning.
+## Core patterns (and when to pick them)
+- Cache-aside — Simple, explicit control; good default for reads.
+- Read-through / Write-through — Let cache be the access path; use when you need tight coupling and simpler app logic.
+- Write-back — High write throughput; use only when replication/flush guarantees are in place, otherwise risk of data loss.
+- Two-level (L1 local + L2 distributed) — L1 for ultra-low latency, L2 for shared state; implement coherence strategy to avoid stale reads.
 
-## Write Strategies
-- Write-through: strong consistency, higher write latency.
-- Write-back: lower write latency, risk of data loss on failure.
-- Write-around: avoids cache pollution for one-time writes.
+## Placement & topology
+- L1: local in-process LRU for micro-latency.
+- L2: Redis/Memcached for shared working set.
+- CDN/edge: static content and cacheable HTTP responses.
 
-## Consistency & Coherence
-- Strong consistency: synchronously update cache and store (costly).
-- Eventual consistency: use async updates, invalidation, or versioning.
-- Invalidation patterns: time-based TTL, explicit invalidation, pub/sub (cache invalidation channel).
+## Eviction & entry management
+- Prefer LRU with TTL. TTL bounds staleness; LRU controls memory.
+- For predictable data, use TTL-only. For frequency-skewed workloads, consider LFU.
+- Protect hot keys with sharding, rate-limiters, or request coalescing.
 
-## Sizing & Capacity
-- Estimate working set, hit-rate targets, and memory per entry.
-- Overprovision for headroom and connection limits.
-- Set TTLs to bound stale data and memory usage.
+## Consistency & invalidation
+- Prefer explicit invalidation on writes or use short TTLs.
+- For multi-instance updates, use a pub/sub invalidation channel or versioned keys.
+- Avoid synchronous strong consistency unless required—it's costly.
 
-## Hotspots & Sharding
-- Avoid single-key hotspots via sharding, request coalescing, or rate limiting.
-- Use consistent hashing for distributed caches to reduce rebalancing.
+## Sizing & capacity planning
+- Estimate working set size = unique hot keys × entry size.
+- Set headroom (20–40%) to handle growth and traffic spikes.
+- Tune connection pool sizes for Redis clients to avoid exhaustion.
 
-## Metrics & Monitoring
-- Hit rate, miss rate, eviction rate, latency (p50/p95), memory usage, connection count.
-- Alert on high miss rates, excessive evictions, or memory pressure.
+## Track metrics
+- Hit rate, local vs remote hit ratio, miss latency, eviction count, memory usage, p50/p95 latency.
+- Alert on sustained low hit rate or rising evictions.
 
-## Operational Considerations
-- Persistence: enable snapshotting or replication if data must survive restarts.
-- Security: network isolation, ACLs, encryption in transit.
-- Backpressure: fallback to backing store when cache is unavailable.
-- Testing: simulate TTL expiry, eviction, and failover.
+## Ensure operational readiness
+- Backup/replication for stateful caches if persistence is required.
+- Secure network access (ACLs, TLS).
+- Chaos-test TTL expiries, failovers, and cache outages.
+- Deploy rolling restarts and monitor cold-start effects.
 
-## Example config knobs
-- max_memory, eviction_policy, ttl_seconds, max_entry_size, replication_factor, read_timeout, write_timeout, connection_pool_size.
+## Common failure modes & mitigations
+- Stampede: use locks, singleflight, or negative caching.
+- Stale reads: implement invalidation or version keys.
+- Memory bloat: enforce max-entry-size, TTLs, and eviction policies.
 
-## When to Cache
-- Read-heavy workloads, expensive computations, remote API responses, or data that tolerates bounded staleness.
+## Example knobs (practical defaults)
+- max_memory: 4GB   # Max memory for cache, evict keys when exceeded
+- eviction_policy: allkeys-lru   # Evict least recently used keys globally
+- ttl_seconds: 600   # Default time-to-live for cache entries
+- connection_pool_size: 50   # Redis client connections per instance
+- replication_factor: 2   # Number of replicas for high availability
 
-## Common Pitfalls
-- Stale reads after updates (missing invalidation).
-- Cache stampedes (use locks or request coalescing).
-- Unbounded memory growth (enforce eviction/TTL).
-- Incorrect serialization or incompatible schema between app versions.
+## Example minimal config (Redis)
+```yaml
+# redis-cache.yml
+maxmemory: 4gb           # Max memory for cache
+maxmemory-policy: allkeys-lru   # Evict least recently used keys when full
+timeout: 0               # Disable client connection timeout
+save: ""                 # Disable RDB persistence for pure cache usage
 
-## Quick Patterns
-- Cache-aside + TTL: simple, commonly used.
-- Read-through + strong consistency: when cache is authoritative for reads.
-- Two-level cache: local L1 + distributed L2 for very low latency with coherence strategy.
+```
+
+Keep rules simple: measure, pick defaults that prevent disasters, and iterate.
 
