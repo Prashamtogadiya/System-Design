@@ -27,7 +27,7 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ## System Design References
 
-- **[Cache Design for Low-Latency Reads and Reduced Backend Load](../docs/cache.md)**
+- **[Cache Design for Low-Latency Reads and Reduced Backend Load](../docs/CACHE.md)**
   - Covers cache placement, eviction, TTL, consistency, failure modes, and ops best practices
   - Focuses on Redis-style caching with practical defaults
   - Designed as a quick reference for interviews and real systems
