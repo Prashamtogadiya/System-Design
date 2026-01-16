@@ -1,70 +1,71 @@
 # Cache Design for Low-Latency Reads and Reduced Backend Load
 
-In one line: Use cache to cut latency, reduce upstream load, and make system behavior predictable under bursts.
+One line: Cache frequently used data to reduce latency, protect backends, and keep systems stable under heavy load.
 
+## When to use caching
+- When most requests are reads.
+- When computations or API calls are slow or expensive.
+- When slightly stale data is acceptable (seconds to hours).
+- When you want to handle traffic spikes without overloading the database.
 
-## When to cache
-- Read-heavy endpoints, expensive computations, or remote API results.
-- Data that can tolerate bounded staleness (minutes to hours).
-- To smooth traffic spikes and reduce DB cost.
+## Core caching patterns - choose based on need
+- Cache-aside: App controls the cache; simplest and most common choice.
+- Read-through / Write-through: Cache sits between app and database; cleaner app code.
+- Write-back: Writes go to cache first; very fast but risky without strong replication.
+- Two-level cache (L1 + L2): Local cache for speed, distributed cache for shared data.
 
-## Core patterns (and when to pick them)
-- Cache-aside — Simple, explicit control; good default for reads.
-- Read-through / Write-through — Let cache be the access path; use when you need tight coupling and simpler app logic.
-- Write-back — High write throughput; use only when replication/flush guarantees are in place, otherwise risk of data loss.
-- Two-level (L1 local + L2 distributed) — L1 for ultra-low latency, L2 for shared state; implement coherence strategy to avoid stale reads.
+## Where to place cache
+- L1 (in-process): Fastest access, but data is per-instance only.
+- L2 (Redis/Memcached): Shared across services, slightly higher latency.
+- CDN / edge: Best for static files and cacheable HTTP responses.
 
-## Placement & topology
-- L1: local in-process LRU for micro-latency.
-- L2: Redis/Memcached for shared working set.
-- CDN/edge: static content and cacheable HTTP responses.
-
-## Eviction & entry management
-- Prefer LRU with TTL. TTL bounds staleness; LRU controls memory.
-- For predictable data, use TTL-only. For frequency-skewed workloads, consider LFU.
-- Protect hot keys with sharding, rate-limiters, or request coalescing.
+## Eviction & TTL (how data leaves cache)
+- TTL limits how long data can stay stale.
+- LRU removes least recently used items when memory is full.
+- Use TTL-only for predictable data.
+- Use LFU when a small set of keys is accessed very frequently.
+- Protect “hot keys” using sharding, rate limits, or request coalescing.
 
 ## Consistency & invalidation
-- Prefer explicit invalidation on writes or use short TTLs.
-- For multi-instance updates, use a pub/sub invalidation channel or versioned keys.
-- Avoid synchronous strong consistency unless required—it's costly.
+- Remove or update cache entries when data changes.
+- Use short TTLs when strict accuracy is not required.
+- Use pub/sub or versioned keys when multiple services update the same data.
+- Avoid strong consistency unless absolutely necessary-it increases latency.
 
-## Sizing & capacity planning
-- Estimate working set size = unique hot keys × entry size.
-- Set headroom (20–40%) to handle growth and traffic spikes.
-- Tune connection pool sizes for Redis clients to avoid exhaustion.
+## Capacity planning
+- Working set = number of hot keys × size per entry.
+- Keep 20–40% free memory for growth and spikes.
+- Tune Redis connection pools to prevent client overload.
 
-## Track metrics
-- Hit rate, local vs remote hit ratio, miss latency, eviction count, memory usage, p50/p95 latency.
-- Alert on sustained low hit rate or rising evictions.
+## Metrics to monitor
+- Cache hit rate (local vs distributed).
+- Cache miss latency.
+- Eviction rate and memory usage.
+- p50 / p95 request latency.
+- Alert when hit rate drops or evictions increase suddenly.
 
-## Ensure operational readiness
-- Backup/replication for stateful caches if persistence is required.
-- Secure network access (ACLs, TLS).
-- Chaos-test TTL expiries, failovers, and cache outages.
-- Deploy rolling restarts and monitor cold-start effects.
+## Common failure modes & fixes
+- Cache stampede: Use locks, singleflight, request coalescing, or TTL jitter.
+- Stale data: Invalidate cache on writes or use versioned keys.
+- Memory bloat: Set max entry size, TTLs, and eviction policies.
 
-## Common failure modes & mitigations
-- Stampede: use locks, singleflight, or negative caching.
-- Stale reads: implement invalidation or version keys.
-- Memory bloat: enforce max-entry-size, TTLs, and eviction policies.
+## Operational checklist
+- Decide if cache data must survive restarts.
+- Use ACLs and TLS to secure access.
+- Test failures: cache restarts, TTL expiry, and node loss.
+- Restart instances gradually to avoid cold-cache storms.
 
-## Example knobs (practical defaults)
-- max_memory: 4GB   # Max memory for cache, evict keys when exceeded
-- eviction_policy: allkeys-lru   # Evict least recently used keys globally
-- ttl_seconds: 600   # Default time-to-live for cache entries
-- connection_pool_size: 50   # Redis client connections per instance
-- replication_factor: 2   # Number of replicas for high availability
+## Practical defaults (good starting point)
+- max_memory: 4GB
+- eviction_policy: allkeys-lru
+- ttl_seconds: 600
+- connection_pool_size: 50
+- replication_factor: 2
 
-## Example minimal config (Redis)
+## Minimal Redis config
 ```yaml
 # redis-cache.yml
-maxmemory: 4gb           # Max memory for cache
-maxmemory-policy: allkeys-lru   # Evict least recently used keys when full
-timeout: 0               # Disable client connection timeout
-save: ""                 # Disable RDB persistence for pure cache usage
-
-```
-
-Keep rules simple: measure, pick defaults that prevent disasters, and iterate.
-
+maxmemory: 4gb
+maxmemory-policy: allkeys-lru
+timeout: 0
+save: ""
