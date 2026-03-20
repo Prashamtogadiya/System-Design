@@ -1,7 +1,9 @@
 {
-  "name": "@repo/consistent-hashing",
+  "name": "@system-design/consistent-hashing",
   "version": "1.0.0",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
-  "dependencies": {}
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  }
 }
