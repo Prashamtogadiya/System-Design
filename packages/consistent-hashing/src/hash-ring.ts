@@ -62,29 +62,25 @@ export class HashRing {
     return this.ring.get(this.sortedKeys[index])!;
   }
 
-  getReplicas(key: string, count: number): NodeName[] {
-    const result: NodeName[] = [];
-    const visited = new Set<NodeName>();
-
-    if (this.sortedKeys.length === 0) return result;
-
+  getReplicas(key: string, count: number): string[] {
     const hash = this.hash(key);
+
+    const result: string[] = [];
+    const visited = new Set<string>();
 
     let idx = this.sortedKeys.findIndex((h) => h >= hash);
     if (idx === -1) idx = 0;
 
-    let i = 0;
-    while (result.length < count && i < this.sortedKeys.length) {
-      const node = this.ring.get(
-        this.sortedKeys[(idx + i) % this.sortedKeys.length],
-      )!;
+    while (result.length < count && visited.size < this.sortedKeys.length) {
+      const vnode = this.ring.get(this.sortedKeys[idx])!;
+      const physical = vnode.split("#")[0];
 
-      if (!visited.has(node)) {
-        visited.add(node);
-        result.push(node);
+      if (!visited.has(physical)) {
+        visited.add(physical);
+        result.push(physical);
       }
 
-      i++;
+      idx = (idx + 1) % this.sortedKeys.length;
     }
 
     return result;

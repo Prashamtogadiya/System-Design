@@ -1,5 +1,5 @@
-import { HashRing } from "@system-design/consistent-hashing";
+import { Cluster } from "@system-design/consistent-hashing/src/cluster";
 
-export const ring = new HashRing(5);
+export const cluster = new Cluster(2);
 
-["A", "B", "C"].forEach((node) => ring.addNode(node));
+["A", "B", "C"].forEach((n) => cluster.addNode(n));

@@ -30,9 +30,13 @@ export class Cluster {
   put(key: string, value: any) {
     const replicas = this.ring.getReplicas(key, this.replicationFactor);
 
-    console.log(`[Write] ${key} → ${replicas.join(", ")}`);
+    console.log(`[Write RAW] ${replicas.join(", ")}`);
 
-    replicas.forEach((nodeName) => {
+    const physicalNodes = replicas.map((vnode) => vnode.split("#")[0]);
+
+    console.log(`[Write] ${key} → ${physicalNodes.join(", ")}`);
+
+    physicalNodes.forEach((nodeName) => {
       const node = this.nodes.get(nodeName);
       node?.put(key, value);
     });
@@ -41,13 +45,18 @@ export class Cluster {
   get(key: string) {
     const replicas = this.ring.getReplicas(key, this.replicationFactor);
 
-    for (const nodeName of replicas) {
+    const physicalNodes = replicas.map((vnode) => vnode.split("#")[0]);
+
+    console.log(`[Read] ${key} → ${physicalNodes.join(", ")}`);
+
+    for (const nodeName of physicalNodes) {
       const node = this.nodes.get(nodeName);
 
       if (node && node.isAlive) {
         const value = node.get(key);
-        if (value !== undefined) {
-          console.log(`[Read] ${key} from ${nodeName}`);
+
+        if (value !== undefined && value !== null) {
+          console.log(`[Read SUCCESS] ${key} from ${nodeName}`);
           return value;
         }
       }
