@@ -22,7 +22,7 @@ export class HashRing {
       const vnode = `${node}#${i}`;
       const hash = this.hash(vnode);
 
-      this.ring.set(hash, node);
+      this.ring.set(hash, vnode);
       this.sortedKeys.push(hash);
     }
 
