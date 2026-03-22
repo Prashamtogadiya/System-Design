@@ -29,9 +29,11 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 ## System Design References
 
 - **[Cache Design for Low-Latency Reads and Reduced Backend Load](./CACHE.md)**
-  - Covers cache placement, eviction, TTL, consistency, failure modes, and ops best practices
-  - Focuses on Redis-style caching with practical defaults
-  - Designed as a quick reference for interviews and real systems
+  - Covers cache placement, eviction, TTL, consistency, failure modes, and ops best practices.
+- **[Bloom Filter Design for Username Availability](./BLOOM_FILTER.md)**
+  - Detailed math and logic for space-efficient probabilistic data structures.
+- **[Consistent Hashing & Cluster Management](./CONSISTENT_HASHING.md)**
+  - Covers distributed data distribution, virtual nodes, and gossip protocols.
 
 ---
 
