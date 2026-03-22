@@ -14,6 +14,7 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 -  [Docs](./docs/)
 -  [Cache Design Reference](./docs/CACHE.md)
 -  [Bloom Filter Design](./docs/BLOOM_FILTER.md)
+-  [Consistent Hashing Design](./docs/CONSISTENT_HASHING.md)
 
 ---
 
@@ -38,17 +39,15 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ### 1 Bloom Filter–Backed Username Service
 
-
 **App:** [`apps/bloom-filter-backed-user-service`](./apps/bloom-filter-backed-user-service)  
 **Library:** [`packages/bloom-filter`](./packages/bloom-filter)  
 **Docs:** [`docs/BLOOM_FILTER.md`](./docs/BLOOM_FILTER.md)
-
 
 **What it demonstrates**
 - Space-efficient probabilistic data structures
 - Reducing unnecessary database reads
 - Handling false positives with DB verification
-- Mathematical tuning of Bloom Filter parameters (`m`, `k`, `p`)
+- Mathematical tuning of Bloom Filter parameters (**m, k, p**)
 
 **Key concepts**
 - Bloom Filter theory → real implementation
@@ -87,6 +86,32 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ---
 
+### 3 Distributed KV Store with Consistent Hashing
+
+**App:** [`apps/consistent-hashing-service`](./apps/consistent-hashing-service)  
+**Library:** [`packages/consistent-hashing`](./packages/consistent-hashing)  
+**Docs:** [`docs/CONSISTENT_HASHING.md`](./docs/CONSISTENT_HASHING.md)
+
+**What it demonstrates**
+- Minimizing data movement during cluster rebalancing
+- Deterministic request routing without a central master
+- High availability through automated failover and replication
+- Decoupling of physical nodes from logical data ownership
+
+**Implemented features**
+- **Hash Ring with Virtual Nodes:** I used 5 vnodes per physical node to ensure uniform data distribution
+- **Replication Strategy:** Data is stored on **R = 2** distinct physical nodes for fault tolerance
+- **Gossip Protocol:** Heartbeat-based failure detection to manage node liveness automatically
+- **Dynamic Membership:** Support for adding or removing nodes at runtime with zero downtime
+
+**Key concepts**
+- Virtual Nodes (vnodes) to prevent hotspots
+- Binary Search (O(log n)) for efficient key lookup
+- Heartbeat propagation and failure suspicion
+- Clockwise successor rule for ownership
+
+---
+
 ## Design Goals
 
 - Keep read paths fast and predictable under load
@@ -101,7 +126,6 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 - Rate limiting
 - Distributed ID generation
-- Consistent hashing and caching
 - Multi-node Bloom Filters
 - Cache stampede handling
 - and much more...
