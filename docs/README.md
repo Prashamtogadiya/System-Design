@@ -9,26 +9,26 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ## 📌 Quick Navigation
 
--  [Apps](./apps/)
--  [Packages](./packages)
--  [Docs](./docs/)
--  [Cache Design Reference](./docs/CACHE.md)
--  [Bloom Filter Design](./docs/BLOOM_FILTER.md)
--  [Consistent Hashing Design](./docs/CONSISTENT_HASHING.md)
+-  [Apps](../apps/)
+-  [Packages](../packages)
+-  [Docs](./)
+-  [Cache Design Reference](./CACHE.md)
+-  [Bloom Filter Design](./BLOOM_FILTER.md)
+-  [Consistent Hashing Design](./CONSISTENT_HASHING.md)
 
 ---
 
 ## Repository Structure
 
--  **[apps/](./apps)** - runnable system design services
-- **[packages/](./packages)** - reusable libraries and shared logic
-- **[docs/](./docs)** - design documents, references, diagrams, and notes
+-  **[apps/](../apps)** - runnable system design services
+- **[packages/](../packages)** - reusable libraries and shared logic
+- **[docs/](./)** - design documents, references, diagrams, and notes
 
 ---
 
 ## System Design References
 
-- **[Cache Design for Low-Latency Reads and Reduced Backend Load](./docs/CACHE.md)**
+- **[Cache Design for Low-Latency Reads and Reduced Backend Load](./CACHE.md)**
   - Covers cache placement, eviction, TTL, consistency, failure modes, and ops best practices
   - Focuses on Redis-style caching with practical defaults
   - Designed as a quick reference for interviews and real systems
@@ -39,9 +39,9 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ### 1 Bloom Filter–Backed Username Service
 
-**App:** [`apps/bloom-filter-backed-user-service`](./apps/bloom-filter-backed-user-service)  
-**Library:** [`packages/bloom-filter`](./packages/bloom-filter)  
-**Docs:** [`docs/BLOOM_FILTER.md`](./docs/BLOOM_FILTER.md)
+**App:** [`apps/bloom-filter-backed-user-service`](../apps/bloom-filter-backed-user-service)  
+**Library:** [`packages/bloom-filter`](../packages/bloom-filter)  
+**Docs:** [`docs/BLOOM_FILTER.md`](./BLOOM_FILTER.md)
 
 **What it demonstrates**
 - Space-efficient probabilistic data structures
@@ -59,9 +59,9 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ### 2 Cache-Backed User Service (FIFO & LRU)
 
-**App:** [`apps/cache-backed-user-service`](./apps/cache-backed-user-service)  
-**Library:** [`packages/cache`](./packages/cache)  
-**Docs:** [`docs/CACHE.md`](./docs/CACHE.md)
+**App:** [`apps/cache-backed-user-service`](../apps/cache-backed-user-service)  
+**Library:** [`packages/cache`](../packages/cache)  
+**Docs:** [`docs/CACHE.md`](./CACHE.md)
 
 **What it demonstrates**
 - Cache-aside pattern
@@ -88,9 +88,9 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ### 3 Distributed KV Store with Consistent Hashing
 
-**App:** [`apps/consistent-hashing-service`](./apps/consistent-hashing-service)  
-**Library:** [`packages/consistent-hashing`](./packages/consistent-hashing)  
-**Docs:** [`docs/CONSISTENT_HASHING.md`](./docs/CONSISTENT_HASHING.md)
+**App:** [`apps/consistent-hashing-service`](../apps/consistent-hashing-service)  
+**Library:** [`packages/consistent-hashing`](../packages/consistent-hashing)  
+**Docs:** [`docs/CONSISTENT_HASHING.md`](./CONSISTENT_HASHING.md)
 
 **What it demonstrates**
 - Minimizing data movement during cluster rebalancing
