@@ -7,7 +7,7 @@ All implementations use **Node.js + TypeScript** in a **TurboRepo monorepo** str
 
 ---
 
-## 📌 Quick Navigation
+## Quick Navigation
 
 - [Apps](../apps/)
 - [Packages](../packages)

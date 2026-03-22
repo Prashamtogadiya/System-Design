@@ -30,7 +30,7 @@ For any key **K**, the owner is the first node **N** encountered moving clockwis
 
 ---
 
-## 📡 Cluster Membership & Service Discovery
+## Cluster Membership & Service Discovery
 
 ### Service Discovery: "How do nodes find each other?"
 In a distributed system, instances are ephemeral. Service Discovery is the "phonebook" of the cluster.
@@ -44,7 +44,7 @@ Membership management ensures all nodes have a consistent view of who else is in
 
 ---
 
-## 🛰️ Gossip Protocol & Failure Detection
+## Gossip Protocol & Failure Detection
 
 ### Purpose
 In a decentralized cluster, there is no "leader" to tell nodes if a peer is down. The **Gossip Protocol** allows nodes to periodically exchange state (heartbeats) with a set of random peers, ensuring information about node failures propagates like a "rumor."
